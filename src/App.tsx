@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { JwtDecoder } from './components/JwtDecoder'
 import { SamlDecoder } from './components/SamlDecoder'
+import { UrlParser } from './components/UrlParser'
 
-type Tab = 'jwt' | 'saml'
+type Tab = 'jwt' | 'saml' | 'url'
 type Theme = 'light' | 'dark'
 
 function getInitialTheme(): Theme {
@@ -41,6 +42,12 @@ function App() {
             >
               SAML
             </button>
+            <button
+              className={activeTab === 'url' ? 'active' : ''}
+              onClick={() => setActiveTab('url')}
+            >
+              URL
+            </button>
           </div>
           <button
             className="theme-toggle"
@@ -53,7 +60,9 @@ function App() {
         </div>
       </header>
       <main>
-        {activeTab === 'jwt' ? <JwtDecoder /> : <SamlDecoder />}
+        {activeTab === 'jwt' && <JwtDecoder />}
+        {activeTab === 'saml' && <SamlDecoder />}
+        {activeTab === 'url' && <UrlParser />}
       </main>
     </div>
   )
