@@ -3,8 +3,9 @@ import './App.css'
 import { JwtDecoder } from './components/JwtDecoder'
 import { SamlDecoder } from './components/SamlDecoder'
 import { UrlParser } from './components/UrlParser'
+import { EmailParser } from './components/EmailParser'
 
-type Tab = 'jwt' | 'saml' | 'url'
+type Tab = 'jwt' | 'saml' | 'url' | 'emails'
 type Theme = 'light' | 'dark'
 
 function getInitialTheme(): Theme {
@@ -48,6 +49,12 @@ function App() {
             >
               URL
             </button>
+            <button
+              className={activeTab === 'emails' ? 'active' : ''}
+              onClick={() => setActiveTab('emails')}
+            >
+              Emails
+            </button>
           </div>
           <button
             className="theme-toggle"
@@ -63,6 +70,7 @@ function App() {
         {activeTab === 'jwt' && <JwtDecoder />}
         {activeTab === 'saml' && <SamlDecoder />}
         {activeTab === 'url' && <UrlParser />}
+        {activeTab === 'emails' && <EmailParser />}
       </main>
     </div>
   )
