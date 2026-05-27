@@ -1,6 +1,6 @@
 # Token Debugger
 
-A client-side web application for decoding and inspecting JWT and SAML authentication tokens. All decoding happens in the browser — no data is sent to any server.
+A client-side web application for decoding and inspecting JWT and SAML authentication tokens, parsing URLs and email lists, and exploring JSON. All processing happens in the browser — no data is sent to any server.
 
 ## Features
 
@@ -18,8 +18,25 @@ A client-side web application for decoding and inspecting JWT and SAML authentic
 - Provides human-readable descriptions for status codes, NameID formats, and auth contexts
 - Toggle to view formatted raw XML
 
+### URL Parser
+- Breaks a URL into origin, path, and fragment
+- Lists query parameters in a table with a parameter count
+- Validates input and flags malformed URLs
+
+### Email Parser
+- Extracts name/address pairs from messy recipient lists
+- Handles `"Name" <email>` format, bare addresses, and Outlook-style semicolon-separated lists
+
+### JSON Parser
+- Parses pasted JSON and renders it as a navigable, collapsible tree
+- Click any object or array node to expand or collapse it; collapsed nodes show an item count
+- Auto-expands all nodes by default, with a one-click **Collapse all / Expand all** toggle
+- Syntax-colored by type (keys, strings, numbers, booleans, null)
+- Reports parse errors with the underlying message
+
 ### General
 - Dark/light theme toggle (persisted in localStorage)
+- Tabbed interface (JWT, SAML, URL, Emails, JSON) with deep-linkable URL hashes
 - Real-time decoding as you type
 - No external decoding libraries — uses native browser APIs
 
@@ -33,5 +50,5 @@ npm run dev
 ## Tech Stack
 
 - React, TypeScript, Vite
-- Native browser APIs for decoding (atob, DOMParser)
+- Native browser APIs for decoding (atob, DOMParser, URL, JSON)
 - CSS custom properties for theming
