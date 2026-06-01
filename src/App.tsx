@@ -5,11 +5,12 @@ import { SamlDecoder } from './components/SamlDecoder'
 import { UrlParser } from './components/UrlParser'
 import { EmailParser } from './components/EmailParser'
 import { JsonParser } from './components/JsonParser'
+import { SqlFormatter } from './components/SqlFormatter'
 
-type Tab = 'jwt' | 'saml' | 'url' | 'emails' | 'json'
+type Tab = 'jwt' | 'saml' | 'url' | 'emails' | 'json' | 'sql'
 type Theme = 'light' | 'dark'
 
-const TABS: Tab[] = ['jwt', 'saml', 'url', 'emails', 'json']
+const TABS: Tab[] = ['jwt', 'saml', 'url', 'emails', 'json', 'sql']
 
 function getInitialTheme(): Theme {
   const saved = localStorage.getItem('theme') as Theme | null
@@ -85,6 +86,12 @@ function App() {
             >
               JSON
             </button>
+            <button
+              className={activeTab === 'sql' ? 'active' : ''}
+              onClick={() => setActiveTab('sql')}
+            >
+              SQL
+            </button>
           </div>
           <button
             className="theme-toggle"
@@ -102,6 +109,7 @@ function App() {
         {activeTab === 'url' && <UrlParser />}
         {activeTab === 'emails' && <EmailParser />}
         {activeTab === 'json' && <JsonParser />}
+        {activeTab === 'sql' && <SqlFormatter />}
       </main>
     </div>
   )
