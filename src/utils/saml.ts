@@ -91,29 +91,90 @@ function findAllElements(doc: Document, localName: string): Element[] {
   return results
 }
 
-export function decodeSaml(input: string): SamlInfo {
-  let xml: string
+function looksLikeXml(s: string): boolean {
+  // Must *start* with a tag. Checking for stray '<'/'>' anywhere is unsafe:
+  // raw DEFLATE-compressed bytes decoded as text often contain those bytes,
+  // which would make us treat compressed binary as XML and skip inflation.
+  return s.trimStart().startsWith('<')
+}
+
+function base64ToBytes(b64: string): Uint8Array<ArrayBuffer> {
+  const bin = atob(b64.replace(/\s+/g, ''))
+  const bytes = new Uint8Array(new ArrayBuffer(bin.length))
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return bytes
+}
+
+function bytesToText(bytes: Uint8Array<ArrayBuffer>): string {
+  return new TextDecoder('utf-8', { fatal: false }).decode(bytes)
+}
+
+// Inflate raw DEFLATE bytes (HTTP-Redirect binding) using the browser's
+// native DecompressionStream. SAML uses raw DEFLATE (no zlib/gzip header).
+async function inflateRaw(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
+  const ds = new DecompressionStream('deflate-raw')
+  const stream = new Blob([bytes]).stream().pipeThrough(ds)
+  const buf = await new Response(stream).arrayBuffer()
+  return new TextDecoder('utf-8').decode(buf)
+}
+
+// Resolve the SAML payload to XML, handling three encodings:
+//  1. raw XML
+//  2. base64 (HTTP-POST binding)
+//  3. base64 + raw DEFLATE (HTTP-Redirect binding, e.g. ?SAMLRequest=)
+// Input may also be URL-encoded around any of the above.
+async function decodeToXml(input: string): Promise<string> {
   const trimmed = input.trim()
 
   if (trimmed.startsWith('<')) {
-    xml = trimmed
-  } else {
-    // Try base64 decode
-    try {
-      xml = atob(trimmed)
-    } catch {
-      // Try URL-decode then base64
-      try {
-        xml = atob(decodeURIComponent(trimmed))
-      } catch {
-        throw new Error('Could not decode input. Paste raw XML or a base64-encoded SAML response.')
-      }
-    }
+    return trimmed
   }
 
-  if (!xml.includes('<') || !xml.includes('>')) {
-    throw new Error('Decoded content does not appear to be XML.')
+  // The payload may still be percent-encoded (e.g. copied straight from a URL).
+  let b64 = trimmed
+  if (/%[0-9a-fA-F]{2}/.test(b64)) {
+    try {
+      b64 = decodeURIComponent(b64).trim()
+    } catch {
+      // fall back to the raw string
+    }
   }
+  if (b64.startsWith('<')) {
+    return b64
+  }
+
+  let bytes: Uint8Array<ArrayBuffer>
+  try {
+    bytes = base64ToBytes(b64)
+  } catch {
+    throw new Error(
+      'Could not decode input. Paste raw XML, a base64-encoded SAML response (POST binding), or a base64 + DEFLATE SAMLRequest (Redirect binding).',
+    )
+  }
+
+  // POST binding: base64 decodes straight to XML.
+  const asText = bytesToText(bytes)
+  if (looksLikeXml(asText)) {
+    return asText
+  }
+
+  // Redirect binding: the bytes are raw DEFLATE-compressed XML.
+  try {
+    const inflated = await inflateRaw(bytes)
+    if (looksLikeXml(inflated)) {
+      return inflated
+    }
+  } catch {
+    // fall through to the error below
+  }
+
+  throw new Error(
+    'Decoded content is neither XML nor DEFLATE-compressed SAML. Check that you pasted the full SAMLRequest/SAMLResponse value.',
+  )
+}
+
+export async function decodeSaml(input: string): Promise<SamlInfo> {
+  const xml = await decodeToXml(input)
 
   const parser = new DOMParser()
   const doc = parser.parseFromString(xml, 'text/xml')

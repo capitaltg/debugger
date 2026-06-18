@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   decodeSaml,
   getStatusDescription,
@@ -12,19 +12,25 @@ export function SamlDecoder() {
   const [decoded, setDecoded] = useState<SamlInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showRaw, setShowRaw] = useState(false)
+  // Decoding is async (DEFLATE inflate); track the latest request so stale
+  // results from earlier keystrokes don't overwrite newer ones.
+  const requestId = useRef(0)
 
-  function handleChange(value: string) {
+  async function handleChange(value: string) {
     setInput(value)
+    const id = ++requestId.current
     if (!value.trim()) {
       setDecoded(null)
       setError(null)
       return
     }
     try {
-      const result = decodeSaml(value)
+      const result = await decodeSaml(value)
+      if (id !== requestId.current) return
       setDecoded(result)
       setError(null)
     } catch (e) {
+      if (id !== requestId.current) return
       setDecoded(null)
       setError(e instanceof Error ? e.message : 'Unknown error')
     }
@@ -37,12 +43,12 @@ export function SamlDecoder() {
   return (
     <>
       <div className="input-section">
-        <label htmlFor="saml-input">Paste SAML Response (XML or Base64)</label>
+        <label htmlFor="saml-input">Paste SAML Request/Response (XML, Base64, or DEFLATE)</label>
         <textarea
           id="saml-input"
           value={input}
           onChange={(e) => handleChange(e.target.value)}
-          placeholder="Paste a SAML Response here — raw XML or base64-encoded"
+          placeholder="Paste a SAMLRequest/SAMLResponse — raw XML, base64 (POST binding), or base64+DEFLATE (Redirect binding)"
           spellCheck={false}
           style={{ minHeight: 150 }}
         />
