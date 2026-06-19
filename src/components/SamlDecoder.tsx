@@ -6,12 +6,14 @@ import {
   getAuthnContextDescription,
   type SamlInfo,
 } from '../utils/saml'
+import { XmlTree } from './XmlTree'
 
 export function SamlDecoder() {
   const [input, setInput] = useState('')
   const [decoded, setDecoded] = useState<SamlInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showRaw, setShowRaw] = useState(false)
+  const [copied, setCopied] = useState(false)
   // Decoding is async (DEFLATE inflate); track the latest request so stale
   // results from earlier keystrokes don't overwrite newer ones.
   const requestId = useRef(0)
@@ -33,6 +35,17 @@ export function SamlDecoder() {
       if (id !== requestId.current) return
       setDecoded(null)
       setError(e instanceof Error ? e.message : 'Unknown error')
+    }
+  }
+
+  async function handleCopyXml() {
+    if (!decoded) return
+    try {
+      await navigator.clipboard.writeText(decoded.rawXml)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setCopied(false)
     }
   }
 
@@ -271,26 +284,21 @@ export function SamlDecoder() {
           <div className="section-card">
             <div className="card-header">
               <h3>Raw XML</h3>
+              <button className="json-expand-toggle" onClick={handleCopyXml}>
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
               <button
+                className="json-expand-toggle"
+                style={{ marginLeft: 8 }}
                 onClick={() => setShowRaw(!showRaw)}
-                style={{
-                  marginLeft: 'auto',
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text)',
-                  padding: '2px 10px',
-                  borderRadius: 4,
-                  fontSize: 12,
-                  cursor: 'pointer',
-                }}
               >
                 {showRaw ? 'Hide' : 'Show'}
               </button>
             </div>
             {showRaw && (
               <div className="card-body">
-                <div className="json-display" style={{ fontSize: 11, maxHeight: 400, overflow: 'auto' }}>
-                  {decoded.rawXml}
+                <div style={{ maxHeight: 400, overflow: 'auto' }}>
+                  <XmlTree xml={decoded.rawXml} />
                 </div>
               </div>
             )}
