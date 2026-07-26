@@ -5,8 +5,8 @@ interface ParsedEmail {
   email: string
 }
 
-const EMAIL_RE = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/
-const EMAIL_RE_G = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g
+const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
+const EMAIL_RE_G = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
 const NAME_EMAIL_RE = /(?:"([^"]+)"|([^<,;"\n]+?))?\s*<\s*([^>\s]+@[^>\s]+)\s*>/g
 
 function cleanName(raw: string): string {

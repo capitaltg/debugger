@@ -30,7 +30,25 @@ header h1 span {
   margin-left: auto;
 }
 
-.theme-toggle {
+footer {
+  border-top: 1px solid var(--border);
+  padding: 14px 24px;
+  font-size: 12px;
+  color: var(--text);
+  text-align: center;
+}
+
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+.theme-toggle,
+.header-link {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -45,13 +63,19 @@ header h1 span {
   line-height: 1;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.header-link:hover {
   color: var(--text-bright);
   border-color: var(--accent);
 }
 
+.header-link {
+  text-decoration: none;
+}
+
 .tab-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
 }
 
@@ -364,7 +388,7 @@ main {
   display: inline-block;
   width: 14px;
   color: var(--text);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .json-key {
@@ -425,7 +449,7 @@ main {
   display: inline-block;
   width: 14px;
   color: var(--text);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .xml-tag-name {
@@ -496,6 +520,12 @@ main {
 
   .header-controls {
     margin-left: 0;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .tab-bar button {
+    padding: 6px 12px;
   }
 
   .info-grid {

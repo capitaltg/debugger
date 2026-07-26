@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { parseXml } from '../utils/xml'
 
 const INDENT_PX = 16
 
@@ -59,8 +60,16 @@ function CloseTag({ name }: { name: string }) {
   )
 }
 
-function XmlNode({ node, depth }: { node: Element; depth: number }) {
-  const [open, setOpen] = useState(true)
+function XmlNode({
+  node,
+  depth,
+  expandAll,
+}: {
+  node: Element
+  depth: number
+  expandAll: boolean
+}) {
+  const [open, setOpen] = useState(expandAll)
   const children = elementChildren(node)
   const text = ownText(node)
   const indent = { paddingLeft: depth * INDENT_PX }
@@ -103,7 +112,7 @@ function XmlNode({ node, depth }: { node: Element; depth: number }) {
       {open && (
         <>
           {children.map((child, i) => (
-            <XmlNode key={i} node={child} depth={depth + 1} />
+            <XmlNode key={i} node={child} depth={depth + 1} expandAll={expandAll} />
           ))}
           <div className="xml-line" style={indent}>
             <span className="xml-toggle-spacer" />
@@ -115,12 +124,8 @@ function XmlNode({ node, depth }: { node: Element; depth: number }) {
   )
 }
 
-export function XmlTree({ xml }: { xml: string }) {
-  const root = useMemo(() => {
-    const doc = new DOMParser().parseFromString(xml, 'text/xml')
-    if (doc.getElementsByTagName('parsererror')[0]) return null
-    return doc.documentElement
-  }, [xml])
+export function XmlTree({ xml, expandAll = true }: { xml: string; expandAll?: boolean }) {
+  const { root } = useMemo(() => parseXml(xml), [xml])
 
   if (!root) {
     // Fall back to plain text if the pretty-printed XML won't re-parse.
@@ -129,7 +134,7 @@ export function XmlTree({ xml }: { xml: string }) {
 
   return (
     <div className="xml-tree">
-      <XmlNode node={root} depth={0} />
+      <XmlNode node={root} depth={0} expandAll={expandAll} />
     </div>
   )
 }
