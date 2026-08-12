@@ -150,6 +150,26 @@ main {
   color: var(--text);
 }
 
+.input-section .text-input {
+  font-family: var(--mono);
+  font-size: 13px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-bright);
+  padding: 10px 16px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input-section .text-input:focus {
+  border-color: var(--accent);
+}
+
+.input-section .text-input::placeholder {
+  color: var(--text);
+}
+
 .output-grid {
   display: flex;
   flex-direction: column;

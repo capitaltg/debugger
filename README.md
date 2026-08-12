@@ -2,7 +2,7 @@
 
 Source: [github.com/capitaltg/debugger](https://github.com/capitaltg/debugger)
 
-A client-side web application for decoding and inspecting JWT and SAML authentication tokens, parsing URLs and email lists, exploring JSON and XML, and formatting SQL. All processing happens in the browser — no data is sent to any server.
+A client-side web application for decoding and inspecting JWT and SAML authentication tokens, X.509 certificates, parsing URLs and email lists, exploring JSON and XML, and formatting SQL. All processing happens in the browser — no data is sent to any server.
 
 ## Features
 
@@ -19,6 +19,20 @@ A client-side web application for decoding and inspecting JWT and SAML authentic
 - Parses and lists SAML attributes with friendly names
 - Provides human-readable descriptions for status codes, NameID formats, and auth contexts
 - Toggle to view formatted raw XML
+
+### Certificate Parser
+- Accepts PEM with or without the `-----BEGIN CERTIFICATE-----` header/footer, bare base64/base64url DER, hex DER, and the `<X509Certificate>` elements copied out of SAML metadata
+- Paste a full chain (multiple PEM blocks) to inspect every certificate, with a name-based chain order check
+- Summarizes validity with days remaining, and flags expired, not-yet-valid, self-issued, CA, and weak-signature certificates
+- Reports names and structure only — no signature is verified, so a self-issued certificate is labeled as such rather than claimed to be self-signed
+- Breaks subject and issuer into named DN components (CN, O, OU, ...) with descriptions
+- Lists Subject Alternative Names by type (DNS, IP, email, URI, DirName)
+- Decodes extensions: key usage, extended key usage, basic constraints, name constraints, CRL distribution points, authority information access (OCSP/CA Issuers), certificate policies, subject/authority key identifiers, and more
+- Reports the public key algorithm with RSA modulus size and exponent or the named EC curve
+- Computes SHA-256 and SHA-1 fingerprints plus the `pin-sha256` public key pin, with one-click copy of any single certificate as PEM
+- Optional hostname check against the certificate's SAN entries, including wildcard rules
+- Names anomalies instead of normalizing them away: negative serial numbers, weak signature algorithms, and multi-valued RDNs are shown as encoded
+- Refuses to parse a private key block, and names the PEM label it found when the input is a CSR or key rather than a certificate
 
 ### URL Parser
 - Breaks a URL into origin, path, and fragment
@@ -52,9 +66,9 @@ A client-side web application for decoding and inspecting JWT and SAML authentic
 
 ### General
 - Dark/light theme toggle (persisted in localStorage)
-- Tabbed interface (JWT, SAML, URL, Emails, JSON, XML, SQL) with deep-linkable URL hashes
+- Tabbed interface (JWT, SAML, Cert, URL, Emails, JSON, XML, SQL) with deep-linkable URL hashes
 - Real-time decoding as you type
-- No external decoding libraries — uses native browser APIs
+- No external decoding libraries — uses native browser APIs, including a hand-rolled DER/ASN.1 reader for certificates
 
 ## Getting Started
 

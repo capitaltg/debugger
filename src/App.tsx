@@ -7,11 +7,12 @@ import { EmailParser } from './components/EmailParser'
 import { JsonParser } from './components/JsonParser'
 import { XmlParser } from './components/XmlParser'
 import { SqlFormatter } from './components/SqlFormatter'
+import { CertificateParser } from './components/CertificateParser'
 
-type Tab = 'jwt' | 'saml' | 'url' | 'emails' | 'json' | 'xml' | 'sql'
+type Tab = 'jwt' | 'saml' | 'cert' | 'url' | 'emails' | 'json' | 'xml' | 'sql'
 type Theme = 'light' | 'dark'
 
-const TABS: Tab[] = ['jwt', 'saml', 'url', 'emails', 'json', 'xml', 'sql']
+const TABS: Tab[] = ['jwt', 'saml', 'cert', 'url', 'emails', 'json', 'xml', 'sql']
 
 function getInitialTheme(): Theme {
   const saved = localStorage.getItem('theme') as Theme | null
@@ -70,6 +71,12 @@ function App() {
               SAML
             </button>
             <button
+              className={activeTab === 'cert' ? 'active' : ''}
+              onClick={() => setActiveTab('cert')}
+            >
+              Cert
+            </button>
+            <button
               className={activeTab === 'url' ? 'active' : ''}
               onClick={() => setActiveTab('url')}
             >
@@ -125,6 +132,7 @@ function App() {
       <main>
         {activeTab === 'jwt' && <JwtDecoder />}
         {activeTab === 'saml' && <SamlDecoder />}
+        {activeTab === 'cert' && <CertificateParser />}
         {activeTab === 'url' && <UrlParser />}
         {activeTab === 'emails' && <EmailParser />}
         {activeTab === 'json' && <JsonParser />}
