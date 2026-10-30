@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useFileDrop } from '../hooks/useFileDrop'
 
 type JsonValue =
   | string
@@ -112,6 +113,8 @@ export function JsonParser() {
   const [expandAll, setExpandAll] = useState(true)
   const [treeKey, setTreeKey] = useState(0)
 
+  const { dragging, dropProps } = useFileDrop(handleChange, setError)
+
   function toggleExpandAll() {
     setExpandAll((prev) => !prev)
     setTreeKey((k) => k + 1)
@@ -142,13 +145,15 @@ export function JsonParser() {
   return (
     <>
       <div className="input-section">
-        <label htmlFor="json-input">Paste JSON</label>
+        <label htmlFor="json-input">Paste or drop JSON</label>
         <textarea
           id="json-input"
           value={input}
           onChange={(e) => handleChange(e.target.value)}
           placeholder='{"name": "example", "nested": {"items": [1, 2, 3]}}'
           spellCheck={false}
+          className={dragging ? 'drag-over' : undefined}
+          {...dropProps}
         />
       </div>
 
@@ -170,7 +175,7 @@ export function JsonParser() {
             <path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5a2 2 0 0 0 2 2h1" />
             <path d="M16 3h1a2 2 0 0 1 2 2v5a2 2 0 0 0 2 2 2 2 0 0 0-2 2v5a2 2 0 0 1-2 2h-1" />
           </svg>
-          <p>Paste JSON above to explore it</p>
+          <p>Paste JSON or drop a file above to explore it</p>
         </div>
       )}
 
