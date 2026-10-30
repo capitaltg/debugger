@@ -146,6 +146,12 @@ main {
   border-color: var(--accent);
 }
 
+.input-section textarea.drag-over {
+  border-color: var(--accent);
+  border-style: dashed;
+  background: var(--accent-dim);
+}
+
 .input-section textarea::placeholder {
   color: var(--text);
 }

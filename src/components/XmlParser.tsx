@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useFileDrop } from '../hooks/useFileDrop'
 import { XmlTree } from './XmlTree'
 import { parseXml } from '../utils/xml'
 
@@ -8,6 +9,8 @@ export function XmlParser() {
   const [rootName, setRootName] = useState<string | null>(null)
   const [expandAll, setExpandAll] = useState(true)
   const [treeKey, setTreeKey] = useState(0)
+
+  const { dragging, dropProps } = useFileDrop(handleChange, setError)
 
   function toggleExpandAll() {
     setExpandAll((prev) => !prev)
@@ -29,13 +32,15 @@ export function XmlParser() {
   return (
     <>
       <div className="input-section">
-        <label htmlFor="xml-input">Paste XML</label>
+        <label htmlFor="xml-input">Paste or drop XML</label>
         <textarea
           id="xml-input"
           value={input}
           onChange={(e) => handleChange(e.target.value)}
           placeholder={'<config env="prod">\n  <timeout>30</timeout>\n</config>'}
           spellCheck={false}
+          className={dragging ? 'drag-over' : undefined}
+          {...dropProps}
         />
       </div>
 
@@ -57,7 +62,7 @@ export function XmlParser() {
             <path d="m9 8-5 4 5 4" />
             <path d="m15 8 5 4-5 4" />
           </svg>
-          <p>Paste XML above to explore it</p>
+          <p>Paste XML or drop a file above to explore it</p>
         </div>
       )}
 
