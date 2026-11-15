@@ -6,10 +6,19 @@ function hasFiles(dataTransfer: DataTransfer | null) {
   return !!dataTransfer && Array.from(dataTransfer.types).includes('Files')
 }
 
-// Lets a textarea accept a dropped file, reading its contents as text.
+function readText(file: File): Promise<string> {
+  return file.text().catch(() => {
+    throw new Error(`Could not read ${file.name}`)
+  })
+}
+
+// Lets a textarea accept a dropped file, reading its contents as text (or via
+// `read`, for files that need converting first). If reading rejects, the
+// Error's message is shown to the user.
 export function useFileDrop(
   onText: (text: string) => void,
   onError: (message: string) => void,
+  read: (file: File) => Promise<string> = readText,
 ) {
   const [dragging, setDragging] = useState(false)
   const latestRead = useRef(0)
@@ -50,13 +59,13 @@ export function useFileDrop(
           return
         }
         const readId = ++latestRead.current
-        file
-          .text()
+        read(file)
           .then((text) => {
             if (readId === latestRead.current) onText(text)
           })
-          .catch(() => {
-            if (readId === latestRead.current) onError(`Could not read ${file.name}`)
+          .catch((e: unknown) => {
+            if (readId !== latestRead.current) return
+            onError(e instanceof Error ? e.message : `Could not read ${file.name}`)
           })
       },
     },
