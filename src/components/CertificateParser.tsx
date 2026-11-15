@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useFileDrop } from '../hooks/useFileDrop'
 import {
   chainLinks,
   daysUntil,
@@ -6,6 +7,7 @@ import {
   formatDuration,
   matchesHostname,
   parseCertificates,
+  readCertificateFile,
   validityState,
   type CertificateInfo,
 } from '../utils/certificate'
@@ -360,6 +362,8 @@ export function CertificateParser() {
   // Parsing is async (fingerprint digests); ignore results from stale keystrokes.
   const requestId = useRef(0)
 
+  const { dragging, dropProps } = useFileDrop(handleChange, setError, readCertificateFile)
+
   async function handleChange(value: string) {
     setInput(value)
     const id = ++requestId.current
@@ -386,7 +390,7 @@ export function CertificateParser() {
   return (
     <>
       <div className="input-section">
-        <label htmlFor="cert-input">Paste Certificate (PEM, base64 DER, or hex)</label>
+        <label htmlFor="cert-input">Paste or drop Certificate (PEM, DER, base64 DER, or hex)</label>
         <textarea
           id="cert-input"
           value={input}
@@ -394,6 +398,8 @@ export function CertificateParser() {
           placeholder="-----BEGIN CERTIFICATE-----&#10;MIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJ...&#10;-----END CERTIFICATE-----&#10;&#10;Header/footer optional. Paste a full chain to inspect every certificate."
           spellCheck={false}
           style={{ minHeight: 170 }}
+          className={dragging ? 'drag-over' : undefined}
+          {...dropProps}
         />
       </div>
 
@@ -431,7 +437,7 @@ export function CertificateParser() {
             <circle cx="12" cy="10" r="2.5" />
             <path d="M9 17.5 8 22l4-2 4 2-1-4.5" />
           </svg>
-          <p>Paste a certificate above to inspect it</p>
+          <p>Paste a certificate or drop a file above to inspect it</p>
         </div>
       )}
 

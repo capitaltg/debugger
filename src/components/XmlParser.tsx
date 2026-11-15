@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useFileDrop } from '../hooks/useFileDrop'
 import { XmlTree } from './XmlTree'
-import { parseXml } from '../utils/xml'
+import { formatXml, parseXml } from '../utils/xml'
 
 export function XmlParser() {
   const [input, setInput] = useState('')
@@ -9,6 +9,7 @@ export function XmlParser() {
   const [rootName, setRootName] = useState<string | null>(null)
   const [expandAll, setExpandAll] = useState(true)
   const [treeKey, setTreeKey] = useState(0)
+  const [copied, setCopied] = useState(false)
 
   const { dragging, dropProps } = useFileDrop(handleChange, setError)
 
@@ -17,8 +18,21 @@ export function XmlParser() {
     setTreeKey((k) => k + 1)
   }
 
+  async function handleCopy() {
+    const { root } = parseXml(input)
+    if (!root) return
+    try {
+      await navigator.clipboard.writeText(formatXml(root.ownerDocument, input))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setCopied(false)
+    }
+  }
+
   function handleChange(value: string) {
     setInput(value)
+    setCopied(false)
     if (!value.trim()) {
       setError(null)
       setRootName(null)
@@ -73,6 +87,9 @@ export function XmlParser() {
             <span className="badge badge-blue">{rootName.toUpperCase()}</span>
             <button className="json-expand-toggle" onClick={toggleExpandAll}>
               {expandAll ? 'Collapse all' : 'Expand all'}
+            </button>
+            <button className="json-expand-toggle" onClick={handleCopy}>
+              {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
           <div className="card-body">

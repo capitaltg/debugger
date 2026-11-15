@@ -169,6 +169,61 @@ function toPem(der: Uint8Array): string {
   return `-----BEGIN CERTIFICATE-----\n${lines.join('\n')}\n-----END CERTIFICATE-----`
 }
 
+// Tag, header size and content length of the DER value at `off`, or null if it
+// doesn't fit in the buffer.
+function derHeader(bytes: Uint8Array, off: number) {
+  const first = bytes[off + 1]
+  if (first === undefined) return null
+  let len = first
+  let hdr = 2
+  if (first & 0x80) {
+    const n = first & 0x7f
+    if (n < 1 || n > 4) return null
+    len = 0
+    for (let k = 0; k < n; k++) len = len * 256 + (bytes[off + 2 + k] ?? NaN)
+    hdr += n
+  }
+  if (!(off + hdr + len <= bytes.length)) return null
+  return { tag: bytes[off], hdr, len }
+}
+
+/**
+ * Read a dropped certificate file. A file that starts like a large DER
+ * SEQUENCE (0x30 then a long-form length, which plain text never does) is
+ * treated as binary: each back-to-back certificate becomes a PEM block.
+ * Private keys and keystores (first inner value an INTEGER) are refused, and
+ * anything else binary is passed on as hex so the parser reports it honestly.
+ * Other files are read as text.
+ */
+export async function readCertificateFile(file: File): Promise<string> {
+  const buf = await file.arrayBuffer().catch(() => {
+    throw new Error(`Could not read ${file.name}`)
+  })
+  const bytes = new Uint8Array(buf)
+  if (!(bytes[0] === 0x30 && bytes[1] >= 0x81 && bytes[1] <= 0x84)) {
+    return new TextDecoder().decode(bytes)
+  }
+  const pems: string[] = []
+  for (let off = 0; off < bytes.length; ) {
+    const h = derHeader(bytes, off)
+    if (!h || h.tag !== 0x30) return bytesToHex(bytes)
+    const inner = bytes[off + h.hdr]
+    if (inner === 0x02) {
+      throw new Error(
+        `${file.name} looks like a private key or keystore, not a certificate. Never paste private keys into a debugging tool — this tab reads X.509 certificates only.`,
+      )
+    }
+    if (inner !== 0x30) return bytesToHex(bytes)
+    pems.push(toPem(bytes.subarray(off, off + h.hdr + h.len)))
+    off += h.hdr + h.len
+  }
+  return pems.join('\n')
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 /**
  * Pull DER blobs out of whatever the user pasted:
  *  - one or more PEM blocks (with header/footer)

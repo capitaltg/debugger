@@ -23,8 +23,45 @@ function valueType(value: JsonValue): string {
   return typeof value
 }
 
+// Re-indent valid JSON text without parsing it, so the copy keeps the source's
+// exact number tokens and duplicate keys (JSON.parse would round or drop them).
+function formatJsonText(src: string): string {
+  let out = ''
+  let depth = 0
+  const nl = () => '\n' + '  '.repeat(depth)
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i]
+    if (c === '"') {
+      let j = i + 1
+      while (src[j] !== '"') j += src[j] === '\\' ? 2 : 1
+      out += src.slice(i, j + 1)
+      i = j
+    } else if (c === '{' || c === '[') {
+      let j = i + 1
+      while (/\s/.test(src[j])) j++
+      if (src[j] === (c === '{' ? '}' : ']')) {
+        out += c + src[j]
+        i = j
+      } else {
+        depth++
+        out += c + nl()
+      }
+    } else if (c === '}' || c === ']') {
+      depth--
+      out += nl() + c
+    } else if (c === ',') {
+      out += ',' + nl()
+    } else if (c === ':') {
+      out += ': '
+    } else if (!/\s/.test(c)) {
+      out += c
+    }
+  }
+  return out
+}
+
 function JsonNode({ name, value, depth, isLast, expandAll }: JsonNodeProps) {
-  const [collapsed, setCollapsed] = useState(expandAll ? false : depth >= 2)
+  const [collapsed, setCollapsed] = useState(!expandAll)
   const type = valueType(value)
   const isContainer = type === 'object' || type === 'array'
 
@@ -112,6 +149,7 @@ export function JsonParser() {
   const [hasValue, setHasValue] = useState(false)
   const [expandAll, setExpandAll] = useState(true)
   const [treeKey, setTreeKey] = useState(0)
+  const [copied, setCopied] = useState(false)
 
   const { dragging, dropProps } = useFileDrop(handleChange, setError)
 
@@ -120,8 +158,20 @@ export function JsonParser() {
     setTreeKey((k) => k + 1)
   }
 
+  async function handleCopy() {
+    if (!hasValue) return
+    try {
+      await navigator.clipboard.writeText(formatJsonText(input))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setCopied(false)
+    }
+  }
+
   function handleChange(value: string) {
     setInput(value)
+    setCopied(false)
     if (!value.trim()) {
       setParsed(null)
       setError(null)
@@ -186,6 +236,9 @@ export function JsonParser() {
             <span className="badge badge-blue">{rootType?.toUpperCase()}</span>
             <button className="json-expand-toggle" onClick={toggleExpandAll}>
               {expandAll ? 'Collapse all' : 'Expand all'}
+            </button>
+            <button className="json-expand-toggle" onClick={handleCopy}>
+              {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
           <div className="card-body">
