@@ -61,7 +61,7 @@ function formatJsonText(src: string): string {
 }
 
 function JsonNode({ name, value, depth, isLast, expandAll }: JsonNodeProps) {
-  const [collapsed, setCollapsed] = useState(expandAll ? false : depth >= 2)
+  const [collapsed, setCollapsed] = useState(!expandAll)
   const type = valueType(value)
   const isContainer = type === 'object' || type === 'array'
 
